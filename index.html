@@ -1,0 +1,142 @@
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<div class="uk-container">
+        <h1 class="uk-heading-divider">Linija</h1>
+<form>
+    <fieldset class="uk-fieldset">
+        <span class="uk-label">KLJUČ</span>
+
+        <div class="uk-margin">
+            <label class="switch">
+                <input type="checkbox"  id="rocno_avtomatsko" checked>
+                <span class="slider round"></span>
+            </label>
+        </div>
+    </fieldset>
+</form>
+
+</div>
+<!-- UIkit CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/css/uikit.min.css" />
+
+<!-- UIkit JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/js/uikit.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/js/uikit-icons.min.js"></script>
+<script src="javascript/jquery.min.js"></script>
+
+<script>
+    var gauge;
+    var canvas;
+    var obj = null;
+    var data      = [];
+    var numvalues = 1200;
+
+    window.onload = function () {
+
+    }
+
+</script>
+
+<div id="field"></div>
+<div id="content"></div>
+<div id="info"></div>
+<script src='/socket.io/socket.io.js'></script>
+<script>
+
+    var messages = [];
+    var socket = io.connect('http://localhost:3700');
+    var field = document.getElementById("field");
+    var sendButton = document.getElementById("send");
+    var content = document.getElementById("content");
+    var info = document.getElementById("info");
+    socket.on('message', function (data) {
+        if(data.value){
+            console.log("tukaj1");
+            $("#rocno_avtomatsko").click();
+            //$("#rocno_avtomatsko").attr('checked', true);
+        }else{
+            console.log("tukaj2");
+            $("#rocno_avtomatsko").removeAttr('checked');
+        }
+
+        console.log(data);
+        console.log(JSON.stringify(data,null," "));
+        messages.push(data.value + " " + data.timestamp);
+        var html = '';
+        for (var i = 0; i < messages.length; i++) {
+            html += messages[i] + '<br />';
+        }
+        content.innerHTML = html;
+
+        info.innerHTML = "nodeId= " + data.nodeId + " timestamp= "+ data.timestamp;
+
+    });
+
+     //sendButton.onclick = function () { var text = field.value;  socket.emit('send', { message: text }); };
+
+</script>
+
+<style>
+    /* The switch - the box around the slider */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 34px;
+}
+
+/* Hide default HTML checkbox */
+.switch input {display:none;}
+
+/* The slider */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 26px;
+  width: 26px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+
+/* Rounded sliders */
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+</style>
+
+
+
