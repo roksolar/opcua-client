@@ -117,9 +117,9 @@ function startHTTPServer() {
 //        });
     });
 
-    var monitoredItem = the_subscription.monitor(
+    var monitor_rezimDelovanja = the_subscription.monitor(
         {
-            nodeId: nodeIdToMonitor,
+            nodeId: "ns=4;s=Kljuc",
             attributeId: 13
         },
         {
@@ -131,18 +131,16 @@ function startHTTPServer() {
                 console.log("Monitor  "+ nodeIdToMonitor.toString() +  " failed");
                 console.loo("ERr = ",err.message);
             }
-
         });
 
-    monitoredItem.on("changed", function(dataValue){
+    monitor_rezimDelovanja.on("changed", function(dataValue){
 
-         console.log(" value has changed " +  dataValue.toString());
-
-        io.sockets.emit('message', {
+        console.log(" value has changed " +  dataValue.toString());
+        io.sockets.emit('rezimDelovanja', {
             value: dataValue.value.value,
             timestamp: dataValue.serverTimestamp,
             nodeId: nodeIdToMonitor.toString(),
-            browseName: "Temperature"
+            browseName: "Kljuc"
         });
     });
 

@@ -2,19 +2,42 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <div class="uk-container">
-        <h1 class="uk-heading-divider">Linija</h1>
-<form>
-    <fieldset class="uk-fieldset">
-        <span class="uk-label">KLJUČ</span>
+    <h1 class="uk-heading-divider">Linija</h1>
+    <ul uk-tab uk-switcher>
+        <li class="uk-active"><a href="#">Pregled linije</a></li>
+        <li><a href="#">Podrobnosti</a></li>
+        <li><a href="#">Alarmi</a></li>
+        <li><a href="#">Recepti</a></li>
+    </ul>
 
-        <div class="uk-margin">
-            <label class="switch">
-                <input type="checkbox"  id="rocno_avtomatsko" checked>
-                <span class="slider round"></span>
-            </label>
-        </div>
-    </fieldset>
-</form>
+    <ul class="uk-switcher uk-margin">
+        <li>
+            <form>
+                <fieldset class="uk-fieldset">
+                    <span >Režim delovanja:</span>
+                    <span id="rezimDelovanja">
+
+                    </span>
+
+                    <!-- <div class="uk-margin">
+                        <label class="switch">
+                            <input type="checkbox"  id="rocno_avtomatsko" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div> -->
+                </fieldset>
+            </form>
+        </li>
+        <li>
+            Podrobnosti
+        </li>
+        <li>
+            Alarmi
+        </li>
+        <li>
+            Recepti
+        </li>
+    </ul>
 
 </div>
 <!-- UIkit CSS -->
@@ -50,13 +73,16 @@
     var sendButton = document.getElementById("send");
     var content = document.getElementById("content");
     var info = document.getElementById("info");
-    socket.on('message', function (data) {
+
+    var rezimDelovanja = document.getElementById("rezimDelovanja");
+    socket.on('rezimDelovanja', function (data) {
         if(data.value){
-            console.log("tukaj1");
-            $("#rocno_avtomatsko").click();
+            rezimDelovanja.innerHTML = "<span class='uk-label uk-label-success'>Avtomatski</span>"
+                    
+           // $("#rocno_avtomatsko").click();
             //$("#rocno_avtomatsko").attr('checked', true);
         }else{
-            console.log("tukaj2");
+            rezimDelovanja.innerHTML = "<span class='uk-label uk-label-warning'>Ročni</span>"
             $("#rocno_avtomatsko").removeAttr('checked');
         }
 
