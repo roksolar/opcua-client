@@ -1,3 +1,5 @@
+
+var ip = process.argv[2];
 var express = require("express");
 var port = 3700;
 
@@ -12,7 +14,7 @@ var client = new opcua.OPCUAClient({
 
 var hostname = require("os").hostname();
 hostname = hostname.toLowerCase();
-var endpointUrl = "opc.tcp://192.168.46.128:4870";
+var endpointUrl = "opc.tcp://"+ip+":4870";
 
 var the_subscription,the_session;
 
