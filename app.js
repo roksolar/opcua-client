@@ -6,12 +6,13 @@ var port = 3700;
 var opcua = require("node-opcua");
 var async = require("async");
 var color = require("colors");
+var AttributeIds = opcua.AttributeIds;
 
 var client = new opcua.OPCUAClient({
     keepSessionAlive: true,
     endpoint_must_exist: false
 });
-
+var resolveNodeId = opcua.resolveNodeId;
 var hostname = require("os").hostname();
 hostname = hostname.toLowerCase();
 var endpointUrl = "opc.tcp://"+ip+":4870";
@@ -119,35 +120,48 @@ function startHTTPServer() {
 //        });
     });
 
-    var monitor_rezimDelovanja = the_subscription.monitor(
-        {
-            nodeId: "ns=4;s=Kljuc",
-            attributeId: 13
-        },
-        {
-            samplingInterval: 100,
-            discardOldest: true,
-            queueSize: 100
-        },opcua.read_service.TimestampsToReturn.Both,function(err) {
-            if (err) {
-                console.log("Monitor  "+ nodeIdToMonitor.toString() +  " failed");
-                console.loo("ERr = ",err.message);
-            }
-        });
 
-    monitor_rezimDelovanja.on("changed", function(dataValue){
+    function make_callback(_nodeId) {
 
-        console.log(" value has changed " +  dataValue.toString());
-        io.sockets.emit('rezimDelovanja', {
-            value: dataValue.value.value,
-            timestamp: dataValue.serverTimestamp,
-            nodeId: nodeIdToMonitor.toString(),
-            browseName: "Kljuc"
-        });
+        var nodeId = _nodeId;
+        return  function(dataValue) {
+            console.log(nodeId.toString() , "\t value : ",dataValue.value.value.toString());
+            io.sockets.emit("rezimDelovanja", {
+                value: dataValue.value.value,
+                timestamp: dataValue.serverTimestamp,
+                nodeId: nodeId.toString(),
+            });
+       };
+    }
+    
+    var ids = [
+        "Kljuc",
+        "Bat_A_naprej" ,
+        "Alarmi",
+        "Bat_B_naprej",
+        "Foto_vhod",
+        "Miza_premik",
+        "Podatki_DB_lokacija1_zasedenost",
+        "Podatki_DB_lokacija2_zasedenost",
+        "Podatki_DB_lokacija3_zasedenost",
+        "Podatki_DB_lokacija4_zasedenost",
+        "Podatki_DB_lokacija5_zasedenost",
+        "Podatki_DB_lokacija6_zasedenost",
+        "Recept",
+        "Stiskalnica_pritisk",
+        "Trak_premik",
+        "error_batA_pokvarjen",
+        "error_batB_pokvarjen"
+    ];
+    ids.forEach(function(id){
+        var nodeId = "ns=4;s="+id;
+        var monitoredItem = the_subscription.monitor(
+            {nodeId: resolveNodeId(nodeId), attributeId: AttributeIds.Value},
+            {samplingInterval: 100, discardOldest: true, queueSize: 100});
+        monitoredItem.on("changed",make_callback(nodeId));
     });
-
 }
 
 
 
-console.log("Listening on port " + port);
+//console.log("Listening on port " + port);
