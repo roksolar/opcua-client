@@ -12,7 +12,7 @@ var client = new opcua.OPCUAClient({
 
 var hostname = require("os").hostname();
 hostname = hostname.toLowerCase();
-var endpointUrl = "opc.tcp://192.168.81.132:4870";
+var endpointUrl = "opc.tcp://192.168.46.128:4870";
 
 var the_subscription,the_session;
 
