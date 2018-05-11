@@ -1,71 +1,85 @@
 
 <!DOCTYPE html>
 <meta charset="utf-8">
-<div class="uk-container">
-    <h1 class="uk-heading-divider">Linija</h1>
-    <ul uk-tab uk-switcher>
-        <li class="uk-active"><a href="#">Pregled linije</a></li>
-        <li><a href="#">Podrobnosti</a></li>
-        <li><a href="#">Alarmi</a></li>
-        <li><a href="#">Recepti</a></li>
-    </ul>
+<body onload="init();">
+    <div class="uk-container">
+        <h1 class="uk-heading-divider">Linija</h1>
+        <ul uk-tab uk-switcher>
+            <li class="uk-active"><a href="#">Pregled linije</a></li>
+            <li><a href="#">Podrobnosti</a></li>
+            <li><a href="#">Alarmi</a></li>
+            <li><a href="#">Recepti</a></li>
+        </ul>
 
-    <ul class="uk-switcher uk-margin">
-        <li>
-            <form>
-                <fieldset class="uk-fieldset">
-                    <span >Režim delovanja:</span>
-                    <span id="rezimDelovanja">
+        <ul class="uk-switcher uk-margin">
+            <li>
+                <form>
+                    <fieldset class="uk-fieldset">
+                        <span >Režim delovanja:</span>
+                        <span id="rezimDelovanja">
 
-                    </span>
+                        </span>
+                    </fieldset>
+                </form>
+                <div>
+                    <canvas id="demoCanvas" width="500" height="300"></canvas>
 
-                    <!-- <div class="uk-margin">
-                        <label class="switch">
-                            <input type="checkbox"  id="rocno_avtomatsko" checked>
-                            <span class="slider round"></span>
-                        </label>
-                    </div> -->
-                </fieldset>
-            </form>
-        </li>
-        <li>
-            Podrobnosti
-        </li>
-        <li>
-            Alarmi
-        </li>
-        <li>
-            Recepti
-        </li>
-    </ul>
-
-</div>
+                </div>
+            </li>
+            <li>
+                Podrobnosti
+            </li>
+            <li>
+                Alarmi
+            </li>
+            <li>
+                Recepti
+            </li>
+        </ul>
+    </div>
+</body>
 <!-- UIkit CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/css/uikit.min.css" />
 
 <!-- UIkit JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/js/uikit.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/js/uikit-icons.min.js"></script>
+<script src='./node_modules/animejs/anime.min.js'></script>
 <script src="javascript/jquery.min.js"></script>
-
-<script>
-    var gauge;
-    var canvas;
-    var obj = null;
-    var data      = [];
-    var numvalues = 1200;
-
-    window.onload = function () {
-
-    }
-
-</script>
 
 <div id="field"></div>
 <div id="content"></div>
 <div id="info"></div>
 <script src='/socket.io/socket.io.js'></script>
+<script src="https://code.createjs.com/tweenjs-0.6.2.min.js"></script>
+<script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+
+
 <script>
+        var circle = new createjs.Shape();
+
+var rect = new createjs.Shape()
+
+    function init() {
+        var stage = new createjs.Stage("demoCanvas");
+
+        rect.graphics.beginFill("grey").drawRoundRect (0, 0, 100, 30, 10);
+        rect.x = 0;
+        rect.y = 85;
+        stage.addChild(rect);
+        circle.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
+        circle.x = 150;
+        circle.y = 100;
+        stage.addChild(circle);
+        createjs.Ticker.setFPS(60);
+        createjs.Ticker.addEventListener("tick", stage);
+
+
+    }
+
+
+    //ANIMATION
+
 
     var messages = [];
     var socket = io.connect('http://localhost:3700');
@@ -73,95 +87,59 @@
     var sendButton = document.getElementById("send");
     var content = document.getElementById("content");
     var info = document.getElementById("info");
-
     var rezimDelovanja = document.getElementById("rezimDelovanja");
     socket.on('rezimDelovanja', function (data) {
-        if(data.value){
+        //SPREMEMBA KLJUČA
+        if(data.nodeId =="ns=4;s=Kljuc"){
+            if(!data.value){
+                rezimDelovanja.innerHTML = "<span class='uk-label uk-label-success'>Avtomatski</span>"
+            }else{
+                rezimDelovanja.innerHTML = "<span class='uk-label uk-label-warning'>Ročni</span>"
+
+            }
+        }
+        //SPREMEMBA BAT 1
+        if(data.nodeId == "ns=4;s=Bat_A_naprej"){
+            if(data.value){
+                createjs.Tween.get(circle)
+                    .to({ x: 400 }, 200, createjs.Ease.getPowInOut(4));
+                createjs.Tween.get(rect)
+                    .to({ x: 250 }, 200, createjs.Ease.getPowInOut(4));
+            }else{
+                console.log("TUKAJ!!");
+                createjs.Tween.get(rect)
+                    .to({ x: 0 }, 200, createjs.Ease.getPowInOut(4));
+            }
+        }
+
+       /* if(data.value){
             rezimDelovanja.innerHTML = "<span class='uk-label uk-label-success'>Avtomatski</span>"
-                    
+            createjs.Tween.get(circle)
+                .to({ x: 400 }, 1000, createjs.Ease.getPowInOut(4));
+            createjs.Tween.get(rect)
+                .to({ x: 250 }, 1000, createjs.Ease.getPowInOut(4));
+
+
            // $("#rocno_avtomatsko").click();
             //$("#rocno_avtomatsko").attr('checked', true);
         }else{
             rezimDelovanja.innerHTML = "<span class='uk-label uk-label-warning'>Ročni</span>"
             $("#rocno_avtomatsko").removeAttr('checked');
-        }
+
+
+        }*/
 
         console.log(data);
         console.log(JSON.stringify(data,null," "));
-        messages.push(data.value + " " + data.timestamp);
-        var html = '';
-        for (var i = 0; i < messages.length; i++) {
-            html += messages[i] + '<br />';
-        }
-        content.innerHTML = html;
 
-        info.innerHTML = "nodeId= " + data.nodeId + " timestamp= "+ data.timestamp;
 
     });
 
-     //sendButton.onclick = function () { var text = field.value;  socket.emit('send', { message: text }); };
 
 </script>
 
 <style>
-    /* The switch - the box around the slider */
-.switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-}
-
-/* Hide default HTML checkbox */
-.switch input {display:none;}
-
-/* The slider */
-.slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: #ccc;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-.slider:before {
-  position: absolute;
-  content: "";
-  height: 26px;
-  width: 26px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  -webkit-transition: .4s;
-  transition: .4s;
-}
-
-input:checked + .slider {
-  background-color: #2196F3;
-}
-
-input:focus + .slider {
-  box-shadow: 0 0 1px #2196F3;
-}
-
-input:checked + .slider:before {
-  -webkit-transform: translateX(26px);
-  -ms-transform: translateX(26px);
-  transform: translateX(26px);
-}
-
-/* Rounded sliders */
-.slider.round {
-  border-radius: 34px;
-}
-
-.slider.round:before {
-  border-radius: 50%;
-}
+ 
 </style>
 
 
