@@ -142,7 +142,6 @@ function startHTTPServer() {
         "Foto_vhod",
         "Miza_premik",
         "Podatki_DB_lokacija1_zasedenost",
-        "Podatki_DB_lokacija2_zasedenost",
         "Podatki_DB_lokacija3_zasedenost",
         "Podatki_DB_lokacija4_zasedenost",
         "Podatki_DB_lokacija5_zasedenost",
@@ -160,8 +159,26 @@ function startHTTPServer() {
             {samplingInterval: 100, discardOldest: true, queueSize: 100});
         monitoredItem.on("changed",make_callback(nodeId));
     });
+
+    test("Recept",555);
+
+    function test(id, value) {
+          var nodesToWrite = [{
+                 nodeId: "ns=4;s="+id,
+                 attributeId: opcua.AttributeIds.Value,
+                 value: { 
+                     value: { 
+                         dataType: opcua.DataType.Double,
+                          value: value
+                     }
+               }
+        }];
+
+       the_session.write(nodesToWrite, function(err,statusCode,diagnosticInfo) {
+            if (!err) {
+                console.log(" write ok" );
+            }
+        });  
+     }
 }
 
-
-
-//console.log("Listening on port " + port);
