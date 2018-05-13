@@ -70,7 +70,9 @@
    // var circle = new createjs.Shape();
     var bat1 = new createjs.Shape();
     var miza = new createjs.Shape();
-
+    var stiskalnica = new createjs.Shape();
+    var bat2 = new createjs.Shape();
+    var trak = new createjs.Shape();
 
     var stage;
     function init() {
@@ -86,21 +88,39 @@
         miza.x = 350;
         miza.y = 200;
         miza_notranjost = new createjs.Shape();
-        miza_notranjost.graphics.beginFill("white").drawCircle(0, 0, 50);
-        miza_notranjost.x = 350;
-        miza_notranjost.y = 200;    
+        miza_notranjost.graphics.beginFill("white").drawCircle(350, 200, 50);   
         stage.addChild(miza);
         stage.addChild(miza_notranjost);
+
+        stiskalnica.graphics.beginFill("DimGrey").drawCircle(0,0,30);
+        stiskalnica.x = 350;
+        stiskalnica.y = 100;
+        stiskalnica.shadow = new createjs.Shadow("#000000", 5, 5, 10);
+        stage.addChild(stiskalnica);
+
+        bat2.graphics.beginFill("black").drawRoundRect (0, 0, 100, 30, 10);
+        bat2.x = 400;
+        bat2.y = 185;
+        stage.addChild(bat2);
+
+        trak.graphics.beginFill("grey").drawRect(0,0,100,400)
+        trak.x = 500;
+        trak.y = 150;
+        stage.addChild(trak);
+
         var path = new createjs.Shape();
         path.graphics.beginStroke("#ff00ff").moveTo(250,200).curveTo(250,100,350,100)
         stage.addChild(path);
 
+        path = new createjs.Shape();
+        path.graphics.beginStroke("#ff00ff").moveTo(350,100).curveTo(450,100, 450,200)
+        stage.addChild(path);
         createjs.Ticker.setFPS(60);
+
+
         createjs.Ticker.addEventListener("tick", stage);
     }
 
-
-    //ANIMATION
     var messages = [];
     var socket = io.connect('http://localhost:3700');
     var rezimDelovanja = document.getElementById("rezimDelovanja");
@@ -120,11 +140,14 @@
                 var obdelovanec_graphics = new createjs.Shape();
                 obdelovanec_graphics.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
                 obdelovanec_graphics.x = 150;
-                obdelovanec_graphics.y = 200
+                obdelovanec_graphics.y = 200;
                 var obdelovanec = new Obdelovanec(id_counter, 0, 1, obdelovanec_graphics);
                 obdelovanci.push(obdelovanec);
                 id_counter++;
                 stage.addChild(obdelovanec.graphics);
+                //NASTAVI Z-INDEX (OBDELOVANEC POD STISKALNICO IN BATOM2)
+                stage.setChildIndex(stiskalnica, stage.getNumChildren()-1);
+                stage.setChildIndex(bat2, stage.getNumChildren()-1);
             }else{
                 //PREMAKNE OBDELOVANEC IZ LOKACIJE 1 NA 2 (ČE OBSTAJA NA LOKACIJI 1)
                 /*obdelovanci.forEach(obd => {
@@ -173,17 +196,17 @@
         //OBRAT MIZE
         if(data.nodeId == "ns=4;s=Miza_premik"){
             if(data.value){
-                   
                 //PREMAKNE OBDELOVANEC IZ LOKACIJE 2 NA 3 (ČE OBSTAJA NA LOKACIJI 1)
-                obdelovanci.forEach(obd => {
+                obdelovanci.forEach(obd => {               
+                    if(obd.lokacija == 3){
+                        var obd_graphics = obd.graphics;
+                        createjs.Tween.get(obd_graphics).to({guide:{ path:[350,100,450,100, 450,200] }},3000);
+                        obd.lokacija = obd.lokacija + 1;
+                    }
                     if(obd.lokacija == 2){
-                        console.log(obd); 
                         var obd_graphics = obd.graphics;
                         createjs.Tween.get(obd_graphics).to({guide:{ path:[250,200, 250,100,350,100] }},3000);
                         obd.lokacija = obd.lokacija + 1;
- 
-                        /*createjs.Tween.get(obd_graphics)
-                            .to({ x: 250 }, 200, createjs.Ease.getPowInOut(4));*/
                     }
                 });    
             }else{
@@ -191,25 +214,62 @@
                     .to({ x: 0 }, 200, createjs.Ease.getPowInOut(4));
             }
         }
+
+        //STISK
+        if(data.nodeId == "ns=4;s=Stiskalnica_pritisk"){
+            if(data.value){
+                stiskalnica.graphics.clear().beginFill("black").drawCircle(0,0,30);
+                stiskalnica.shadow = null;
+            }else{
+                stiskalnica.graphics.clear().beginFill("DimGrey").drawCircle(0,0,30);
+                stiskalnica.shadow = new createjs.Shadow("#000000", 5, 5, 10);
+            }
+        }
+        //SPREMEMBA BAT 2
+        if(data.nodeId == "ns=4;s=Bat_B_naprej"){
+            if(data.value){
+                //PREMAKNI BAT 1
+                createjs.Tween.get(bat2)
+                    .to({ x: 500 }, 200, createjs.Ease.getPowInOut(4));
+                //PREMAKNE OBDELOVANEC IZ LOKACIJE 4 NA 5 (ČE OBSTAJA NA LOKACIJI 4)
+                obdelovanci.forEach(obd => {
+                    if(obd.lokacija == 4){
+                        var obd_graphics = obd.graphics;
+                        createjs.Tween.get(obd_graphics)
+                            .to({ x: 550 }, 200, createjs.Ease.getPowInOut(4));
+                        obd.lokacija = obd.lokacija + 1;
+                    }
+                });    
+            }else{
+                createjs.Tween.get(bat2)
+                    .to({ x: 400 }, 200, createjs.Ease.getPowInOut(4));
+            }
+        }
+
+        //SPREMEMBA TRAK
+        if(data.nodeId == "ns=4;s=Trak_premik"){
+            if(data.value){
+                //PREMAKNE OBDELOVANEC IZ LOKACIJE 5 NA 6 (ČE OBSTAJA NA LOKACIJI 5)
+                obdelovanci.forEach(obd => {
+                    //KONEC - ODSTRANI KOS
+                    if(obd.lokacija == 6){
+                       // TODO: remove object
+                       // var obd_graphics = obd.graphics;
+                       // obd_graphics.clear();
+                    }
+                    if(obd.lokacija == 5){
+                        var obd_graphics = obd.graphics;
+                        createjs.Tween.get(obd_graphics)
+                            .to({ y: 500 }, 2000, createjs.Ease.getPowInOut(4));
+                        obd.lokacija = obd.lokacija + 1;
+                    }
+                });    
+            }else{
+
+            }
+        }
     });
 
-
-       /* if(data.value){
-            rezimDelovanja.innerHTML = "<span class='uk-label uk-label-success'>Avtomatski</span>"
-            createjs.Tween.get(circle)
-                .to({ x: 400 }, 1000, createjs.Ease.getPowInOut(4));
-            createjs.Tween.get(rect)
-                .to({ x: 250 }, 1000, createjs.Ease.getPowInOut(4));
-
-
-           // $("#rocno_avtomatsko").click();
-            //$("#rocno_avtomatsko").attr('checked', true);
-        }else{
-            rezimDelovanja.innerHTML = "<span class='uk-label uk-label-warning'>Ročni</span>"
-            $("#rocno_avtomatsko").removeAttr('checked');
-
-
-        }*/
 
 
 
