@@ -27,10 +27,122 @@
                 </div>
             </li>
             <li>
-                Podrobnosti
+                <table class="uk-table uk-table-hover uk-table-divider">
+                    <thead>
+                        <tr>
+                            <th>Spremenljivka</th>
+                            <th>Tip</th>
+                            <th>Vrednost</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Kljuc</td>
+                            <td>Vhod</td>
+                            <td id="kljuc"></td>
+                        </tr>
+                        <tr>
+                            <td>Recept</td>
+                            <td>Vhod</td>
+                            <td id="recept"></td>
+                        </tr>
+                        <tr>
+                            <td>Alarmi</td>
+                            <td>Izhod</td>
+                            <td id="alarmi"></td>
+                        </tr>
+                        <tr>
+                            <td>Bat A naprej</td>
+                            <td>Izhod</td>
+                            <td id="bat_a_naprej"></td>
+                        </tr>
+                        <tr>
+                            <td>Bat B naprej</td>
+                            <td>Izhod</td>
+                            <td id="bat_b_naprej"></td>
+                        </tr>
+                        <tr>
+                            <td>Fotocelica na vhodu</td>
+                            <td>Izhod</td>
+                            <td id="foto_vhod"></td>
+                        </tr>
+                        <tr>
+                            <td>Premik mize</td>
+                            <td>Izhod</td>
+                            <td id="miza_premik"></td>
+                        </tr>
+                        <tr>
+                            <td>Zasedenost lokacije 1</td>
+                            <td>Izhod</td>
+                            <td id="lokacija1_zasedenost"></td>
+                        </tr>
+                        <tr>
+                            <td>Zasedenost lokacije 3</td>
+                            <td>Izhod</td>
+                            <td id="lokacija3_zasedenost"></td>
+                        </tr>
+                        <tr>
+                            <td>Zasedenost lokacije 4</td>
+                            <td>Izhod</td>
+                            <td id="lokacija4_zasedenost"></td>
+                        </tr>
+                        <tr>
+                            <td>Zasedenost lokacije 5</td>
+                            <td>Izhod</td>
+                            <td id="lokacija5_zasedenost"></td>
+                        </tr>
+                        <tr>
+                            <td>Zasedenost lokacije 6</td>
+                            <td>Izhod</td>
+                            <td id="lokacija6_zasedenost"></td>
+                        </tr>
+                        <tr>
+                            <td>Stiskalnica pritisk</td>
+                            <td>Izhod</td>
+                            <td id="stiskalnica_pritisk"></td>
+                        </tr>
+                        <tr>
+                            <td>Premik traku</td>
+                            <td>Izhod</td>
+                            <td id="premik_trak"></td>
+                        </tr>
+                        <tr>
+                            <td>Napaka pri batu A</td>
+                            <td>Alarm</td>
+                            <td id="error_bat_a"></td>
+                        </tr>
+                        <tr>
+                            <td>Napaka pri batu B</td>
+                            <td>Alarm</td>
+                            <td id="error_bat_b"></td>
+                        </tr>
+                    </tbody>
+                </table>
             </li>
             <li>
                 Alarmi
+
+                <table class="uk-table uk-table-hover uk-table-divider">
+                    <thead>
+                        <tr>
+                            <th>Alarm</th>
+                            <th>Vrednost</th>
+                            <th>Opis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Napaka pri batu A </td>
+                            <td id="error_bat_a1"></td>
+                            <td>Batu A je zmanjkalo zraka</td>
+                        </tr>
+                        <tr>
+                            <td>Napaka pri batu A </td>
+                            <td id="error_bat_b1"></td>
+                            <td>Batu B je zmanjkalo zraka</td>
+                        </tr>                       
+                    </tbody>
+                </table>
             </li>
             <li>
                 Recepti
@@ -129,8 +241,11 @@
         if(data.nodeId =="ns=4;s=Kljuc"){
             if(!data.value){
                 rezimDelovanja.innerHTML = "<span class='uk-label uk-label-success'>Avtomatski</span>"
+                document.getElementById("kljuc").innerHTML = "false";
             }else{
                 rezimDelovanja.innerHTML = "<span class='uk-label uk-label-warning'>Ročni</span>"
+                document.getElementById("kljuc").innerHTML = "true";
+
 
             }
         }
@@ -148,6 +263,14 @@
                 //NASTAVI Z-INDEX (OBDELOVANEC POD STISKALNICO IN BATOM2)
                 stage.setChildIndex(stiskalnica, stage.getNumChildren()-1);
                 stage.setChildIndex(bat2, stage.getNumChildren()-1);
+
+                if(data.value){
+                    document.getElementById("lokacija1_zasedenost").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("lokacija1_zasedenost").innerHTML = "false";
+                }
+
             }else{
                 //PREMAKNE OBDELOVANEC IZ LOKACIJE 1 NA 2 (ČE OBSTAJA NA LOKACIJI 1)
                 /*obdelovanci.forEach(obd => {
@@ -192,6 +315,13 @@
                 createjs.Tween.get(bat1)
                     .to({ x: 0 }, 200, createjs.Ease.getPowInOut(4));
             }
+
+             if(data.value){
+                    document.getElementById("bat_a_naprej").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("bat_a_naprej").innerHTML = "false";
+                }
         }
         //OBRAT MIZE
         if(data.nodeId == "ns=4;s=Miza_premik"){
@@ -213,6 +343,13 @@
                 createjs.Tween.get(bat1)
                     .to({ x: 0 }, 200, createjs.Ease.getPowInOut(4));
             }
+
+            if(data.value){
+                    document.getElementById("miza_premik").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("miza_premik").innerHTML = "false";
+                }
         }
 
         //STISK
@@ -224,6 +361,13 @@
                 stiskalnica.graphics.clear().beginFill("DimGrey").drawCircle(0,0,30);
                 stiskalnica.shadow = new createjs.Shadow("#000000", 5, 5, 10);
             }
+
+            if(data.value){
+                    document.getElementById("stiskalnica_pritisk").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("stiskalnica_pritisk").innerHTML = "false";
+                }
         }
         //SPREMEMBA BAT 2
         if(data.nodeId == "ns=4;s=Bat_B_naprej"){
@@ -244,6 +388,14 @@
                 createjs.Tween.get(bat2)
                     .to({ x: 400 }, 200, createjs.Ease.getPowInOut(4));
             }
+
+            if(data.value){
+                    document.getElementById("bat_b_naprej").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("bat_b_naprej").innerHTML = "false";
+                }
+            
         }
 
         //SPREMEMBA TRAK
@@ -267,7 +419,40 @@
             }else{
 
             }
+
+            if(data.value){
+                    document.getElementById("premik_trak").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("premik_trak").innerHTML = "false";
+                }    
+
         }
+
+        //NAPAKA PRI BATU A
+        if(data.nodeId == "ns=4;s=error_batA_pokvarjen"){
+            if(data.value){
+                    document.getElementById("error_bat_a").innerHTML = "true";
+                    document.getElementById("error_bat_a1").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("error_bat_a").innerHTML = "false";
+                    document.getElementById("error_bat_a1").innerHTML = "true";
+                }
+        }
+
+        //NAPAKA PRI BATU B
+        if(data.nodeId == "ns=4;s=error_batB_pokvarjen"){
+            if(data.value){
+                    document.getElementById("error_bat_b").innerHTML = "true";
+                    document.getElementById("error_bat_b1").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("error_bat_b").innerHTML = "false";
+                    document.getElementById("error_bat_b2").innerHTML = "true";
+                }
+        }
+
     });
 
 
