@@ -6,11 +6,22 @@ var port = 3700;
 var opcua = require("node-opcua");
 var async = require("async");
 var color = require("colors");
+var MessageSecurityMode = require("node-opcua-service-secure-channel").MessageSecurityMode;
+var SecurityPolicy = require("node-opcua-secure-channel").SecurityPolicy;
+var crypto_utils = require("node-opcua-crypto").crypto_utils;
 var AttributeIds = opcua.AttributeIds;
 
 var client = new opcua.OPCUAClient({
+    securityMode: MessageSecurityMode.SIGNANDENCRYPT,
+    securityPolicy: SecurityPolicy.Basic128Rsa15,
+    requestedSessionTimeout: 10000,
+    serverCertificate: crypto_utils.readCertificate("./pki/trusted/ab4a9f208187e481576b4f963be883e88de79e04.pem"),
+    //serverCertificate: crypto_utils.readCertificate("./certificates/server_cert_2048.pem"),
+    certificateFile : "./certificates/client_selfsigned_cert_2048.pem",
+    privateKeyFile: "./certificates/client_key_2048.pem",
+    endpoint_must_exist: false,
     keepSessionAlive: true,
-    endpoint_must_exist: false
+
 });
 var resolveNodeId = opcua.resolveNodeId;
 var hostname = require("os").hostname();
@@ -30,8 +41,10 @@ async.series([
         //CONNECT
         client.connect(endpointUrl, function (err) {
             if(err) {
+                
                 console.log(" cannot connect to endpoint :" , endpointUrl );
             } else {
+                crypto_utils.readCertificate(client.serverCertificate);
                 console.log("connected !");
             }
             callback(err);
@@ -120,6 +133,7 @@ function startHTTPServer() {
 //        });
     });
 
+        
 
     function make_callback(_nodeId) {
 
