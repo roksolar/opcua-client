@@ -146,6 +146,17 @@
             </li>
             <li>
                 Recepti
+
+                <div class="uk-margin">
+                    <select id="recept_izbira" class="uk-select">
+                        <option value="1">Stiskaj 1 sekundo</option>
+                        <option value="2">Stiskaj 2 sekundi</option>
+                        <option value="3">Stiskaj 3 sekunde</option>
+                    </select>
+                </div>
+
+                <button onclick="spremeni_recept()" class="uk-button uk-button-default">Pošlji podatke</button>
+
             </li>
         </ul>
     </div>
@@ -167,6 +178,25 @@
 <script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
 
 <script>
+
+    function spremeni_recept() {
+    dataValue = -1;
+    if (document.getElementById("recept_izbira").value == "1"){
+        dataValue = 1;
+    }    
+    else if(document.getElementById("recept_izbira").value == "2") {
+        dataValue = 2;
+    }
+    else if(document.getElementById("recept_izbira").value == "3") {
+        dataValue = 3;
+    }
+    
+    socket.emit("recepti", {
+                value: dataValue,
+                timestamp: dataValue.serverTimestamp,
+                nodeId: "ns=4;s=Recept2"
+            });       
+}
 
     obdelovanci = [];
     class Obdelovanec {

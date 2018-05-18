@@ -12,13 +12,13 @@ var crypto_utils = require("node-opcua-crypto").crypto_utils;
 var AttributeIds = opcua.AttributeIds;
 
 var client = new opcua.OPCUAClient({
-    securityMode: MessageSecurityMode.SIGNANDENCRYPT,
-    securityPolicy: SecurityPolicy.Basic128Rsa15,
-    requestedSessionTimeout: 10000,
-    serverCertificate: crypto_utils.readCertificate("./pki/trusted/ab4a9f208187e481576b4f963be883e88de79e04.pem"),
+    //securityMode: MessageSecurityMode.SIGNANDENCRYPT,
+    //securityPolicy: SecurityPolicy.Basic128Rsa15,
+    //requestedSessionTimeout: 10000,
+    //serverCertificate: crypto_utils.readCertificate("./pki/trusted/ab4a9f208187e481576b4f963be883e88de79e04.pem"),
     //serverCertificate: crypto_utils.readCertificate("./certificates/server_cert_2048.pem"),
-    certificateFile : "./certificates/client_selfsigned_cert_2048.pem",
-    privateKeyFile: "./certificates/client_key_2048.pem",
+    //certificateFile : "./certificates/client_selfsigned_cert_2048.pem",
+    //privateKeyFile: "./certificates/client_key_2048.pem",
     endpoint_must_exist: false,
     keepSessionAlive: true,
 
@@ -44,7 +44,7 @@ async.series([
                 
                 console.log(" cannot connect to endpoint :" , endpointUrl );
             } else {
-                crypto_utils.readCertificate(client.serverCertificate);
+                //crypto_utils.readCertificate(client.serverCertificate);
                 console.log("connected !");
             }
             callback(err);
@@ -128,12 +128,30 @@ function startHTTPServer() {
     var io = require('socket.io').listen(app.listen(port));
 
     io.sockets.on('connection', function (socket) {
-//        socket.on('send', function (data) {
-//            io.sockets.emit('message', data);
-//        });
+        socket.on('recepti', function (data) {
+            console.log("test");
+            var nodesToWrite = [{
+                    nodeId: data.nodeId,
+                    attributeId: opcua.AttributeIds.Value,
+                    value: { 
+                        value: { 
+                            dataType: opcua.DataType.Double,
+                            value: data.value
+                        }
+                }
+            }];
+            console.log("test");
+            console.log(data);
+        the_session.write(nodesToWrite, function(err,statusCode,diagnosticInfo) {
+                if (!err) {
+                    console.log(" write ok" );
+                }
+            });  
+        });
     });
 
-        
+    
+      
 
     function make_callback(_nodeId) {
 
@@ -160,7 +178,7 @@ function startHTTPServer() {
         "Podatki_DB_lokacija4_zasedenost",
         "Podatki_DB_lokacija5_zasedenost",
         "Podatki_DB_lokacija6_zasedenost",
-        "Recept",
+        "Recept2",
         "Stiskalnica_pritisk",
         "Trak_premik",
         "error_batA_pokvarjen",
@@ -174,25 +192,5 @@ function startHTTPServer() {
         monitoredItem.on("changed",make_callback(nodeId));
     });
 
-    test("Recept",555);
-
-    function test(id, value) {
-          var nodesToWrite = [{
-                 nodeId: "ns=4;s="+id,
-                 attributeId: opcua.AttributeIds.Value,
-                 value: { 
-                     value: { 
-                         dataType: opcua.DataType.Double,
-                          value: value
-                     }
-               }
-        }];
-
-       the_session.write(nodesToWrite, function(err,statusCode,diagnosticInfo) {
-            if (!err) {
-                console.log(" write ok" );
-            }
-        });  
-     }
+    
 }
-
