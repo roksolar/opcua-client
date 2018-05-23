@@ -11,14 +11,47 @@ var SecurityPolicy = require("node-opcua-secure-channel").SecurityPolicy;
 var crypto_utils = require("node-opcua-crypto").crypto_utils;
 var AttributeIds = opcua.AttributeIds;
 
+
+var ids = [
+    "Kljuc",
+    "Bat_A_naprej" ,
+    "Alarmi",
+    "Bat_B_naprej",
+    "Foto_vhod",
+    "Miza_premik",
+    "Podatki_DB_lokacija1_zasedenost",
+    "Podatki_DB_lokacija2_zasedenost",
+    "Podatki_DB_lokacija3_zasedenost",
+    "Podatki_DB_lokacija4_zasedenost",
+    "Podatki_DB_lokacija5_zasedenost",
+    "Podatki_DB_lokacija6_zasedenost",
+    "Podatki_DB_lokacija1_ID",
+    "Podatki_DB_lokacija2_ID",
+    "Podatki_DB_lokacija3_ID",
+    "Podatki_DB_lokacija4_ID",
+    "Podatki_DB_lokacija5_ID",
+    "Podatki_DB_lokacija6_ID",
+    "Podatki_DB_lokacija1_recept",
+    "Podatki_DB_lokacija2_recept",
+    "Podatki_DB_lokacija3_recept",
+    "Podatki_DB_lokacija4_recept",
+    "Podatki_DB_lokacija5_recept",
+    "Podatki_DB_lokacija6_recept",
+    "Recept2",
+    "Stiskalnica_pritisk",
+    "Trak_premik",
+    "error_batA_pokvarjen",
+    "error_batB_pokvarjen"
+];
+
 var client = new opcua.OPCUAClient({
-    //securityMode: MessageSecurityMode.SIGNANDENCRYPT,
-    //securityPolicy: SecurityPolicy.Basic128Rsa15,
-    //requestedSessionTimeout: 10000,
-    //serverCertificate: crypto_utils.readCertificate("./pki/trusted/ab4a9f208187e481576b4f963be883e88de79e04.pem"),
+    securityMode: MessageSecurityMode.SIGNANDENCRYPT,
+    securityPolicy: SecurityPolicy.Basic128Rsa15,
+    requestedSessionTimeout: 10000,
+    serverCertificate: crypto_utils.readCertificate("./pki/trusted/ab4a9f208187e481576b4f963be883e88de79e04.pem"),
     //serverCertificate: crypto_utils.readCertificate("./certificates/server_cert_2048.pem"),
-    //certificateFile : "./certificates/client_selfsigned_cert_2048.pem",
-    //privateKeyFile: "./certificates/client_key_2048.pem",
+    certificateFile : "./certificates/client_selfsigned_cert_2048.pem",
+    privateKeyFile: "./certificates/client_key_2048.pem",
     endpoint_must_exist: false,
     keepSessionAlive: true,
 
@@ -142,11 +175,39 @@ function startHTTPServer() {
             }];
             console.log("test");
             console.log(data);
-        the_session.write(nodesToWrite, function(err,statusCode,diagnosticInfo) {
+            the_session.write(nodesToWrite, function(err,statusCode,diagnosticInfo) {
                 if (!err) {
                     console.log(" write ok" );
                 }
             });  
+        });
+
+        socket.on('posodobiStanje', function(){
+            ids.forEach(function(id){
+                var nodeToRead = { nodeId: "ns=4;s="+id, attributeId: opcua.AttributeIds.Value };
+                the_session.read(nodeToRead, 0, function(err, dataValue) {
+                    if (!err) {
+                        io.sockets.emit("posodobljenoStanje", {
+                            value: dataValue.value.value,
+                            timestamp: dataValue.serverTimestamp,
+                            nodeId: "ns=4;s="+id,
+                        });
+                    }
+                });
+            });
+        });
+        
+        ids.forEach(function(id){
+            var nodeToRead = { nodeId: "ns=4;s="+id, attributeId: opcua.AttributeIds.Value };
+            the_session.read(nodeToRead, 0, function(err, dataValue) {
+                if (!err) {
+                    io.sockets.emit("spremembaStanja", {
+                        value: dataValue.value.value,
+                        timestamp: dataValue.serverTimestamp,
+                        nodeId: "ns=4;s="+id,
+                    });
+                }
+            });
         });
     });
 
@@ -154,11 +215,10 @@ function startHTTPServer() {
       
 
     function make_callback(_nodeId) {
-
         var nodeId = _nodeId;
         return  function(dataValue) {
             console.log(nodeId.toString() , "\t value : ",dataValue.value.value.toString());
-            io.sockets.emit("rezimDelovanja", {
+            io.sockets.emit("spremembaStanja", {
                 value: dataValue.value.value,
                 timestamp: dataValue.serverTimestamp,
                 nodeId: nodeId.toString(),
@@ -166,24 +226,7 @@ function startHTTPServer() {
        };
     }
     
-    var ids = [
-        "Kljuc",
-        "Bat_A_naprej" ,
-        "Alarmi",
-        "Bat_B_naprej",
-        "Foto_vhod",
-        "Miza_premik",
-        "Podatki_DB_lokacija1_zasedenost",
-        "Podatki_DB_lokacija3_zasedenost",
-        "Podatki_DB_lokacija4_zasedenost",
-        "Podatki_DB_lokacija5_zasedenost",
-        "Podatki_DB_lokacija6_zasedenost",
-        "Recept2",
-        "Stiskalnica_pritisk",
-        "Trak_premik",
-        "error_batA_pokvarjen",
-        "error_batB_pokvarjen"
-    ];
+  
     ids.forEach(function(id){
         var nodeId = "ns=4;s="+id;
         var monitoredItem = the_subscription.monitor(
@@ -192,5 +235,6 @@ function startHTTPServer() {
         monitoredItem.on("changed",make_callback(nodeId));
     });
 
+    
     
 }

@@ -19,6 +19,12 @@
                         <span id="rezimDelovanja">
 
                         </span>
+                        <br>
+                        <span >Trenutni recept:</span>
+                        <span id="trenutniRecept">
+
+                        </span>
+                        
                     </fieldset>
                 </form>
                 <div>
@@ -47,11 +53,6 @@
                             <td id="recept"></td>
                         </tr>
                         <tr>
-                            <td>Alarmi</td>
-                            <td>Izhod</td>
-                            <td id="alarmi"></td>
-                        </tr>
-                        <tr>
                             <td>Bat A naprej</td>
                             <td>Izhod</td>
                             <td id="bat_a_naprej"></td>
@@ -75,6 +76,11 @@
                             <td>Zasedenost lokacije 1</td>
                             <td>Izhod</td>
                             <td id="lokacija1_zasedenost"></td>
+                        </tr>
+                        <tr>
+                            <td>Zasedenost lokacije 2</td>
+                            <td>Izhod</td>
+                            <td id="lokacija2_zasedenost"></td>
                         </tr>
                         <tr>
                             <td>Zasedenost lokacije 3</td>
@@ -120,24 +126,23 @@
                 </table>
             </li>
             <li>
-                Alarmi
 
                 <table class="uk-table uk-table-hover uk-table-divider">
                     <thead>
                         <tr>
                             <th>Alarm</th>
-                            <th>Vrednost</th>
+                            <th>Čas napake</th>
                             <th>Opis</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
+                        <tr id= "napaka_bat_A">
                             <td>Napaka pri batu A </td>
                             <td id="error_bat_a1"></td>
                             <td>Batu A je zmanjkalo zraka</td>
                         </tr>
-                        <tr>
-                            <td>Napaka pri batu A </td>
+                        <tr id= "napaka_bat_B">
+                            <td>Napaka pri batu B </td>
                             <td id="error_bat_b1"></td>
                             <td>Batu B je zmanjkalo zraka</td>
                         </tr>                       
@@ -145,7 +150,6 @@
                 </table>
             </li>
             <li>
-                Recepti
 
                 <div class="uk-margin">
                     <select id="recept_izbira" class="uk-select">
@@ -167,7 +171,6 @@
 <!-- UIkit JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/js/uikit.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-beta.42/js/uikit-icons.min.js"></script>
-<script src='./node_modules/animejs/anime.min.js'></script>
 <script src="javascript/jquery.min.js"></script>
 
 <div id="field"></div>
@@ -179,37 +182,28 @@
 
 <script>
 
+      
+
+
     function spremeni_recept() {
-    dataValue = -1;
-    if (document.getElementById("recept_izbira").value == "1"){
-        dataValue = 1;
-    }    
-    else if(document.getElementById("recept_izbira").value == "2") {
-        dataValue = 2;
-    }
-    else if(document.getElementById("recept_izbira").value == "3") {
-        dataValue = 3;
-    }
-    
-    socket.emit("recepti", {
-                value: dataValue,
-                timestamp: dataValue.serverTimestamp,
-                nodeId: "ns=4;s=Recept2"
-            });       
-}
-
-    obdelovanci = [];
-    class Obdelovanec {
-        constructor(id, recept, lokacija, graphics) {
-            this.id = id;
-            this.recept = recept;
-            this.lokacija = lokacija;
-            this.graphics = graphics;
+        dataValue = -1;
+        if (document.getElementById("recept_izbira").value == "1"){
+            dataValue = 1;
+        }    
+        else if(document.getElementById("recept_izbira").value == "2") {
+            dataValue = 2;
         }
+        else if(document.getElementById("recept_izbira").value == "3") {
+            dataValue = 3;
+        }
+        
+        socket.emit("recepti", {
+                    value: dataValue,
+                    timestamp: dataValue.serverTimestamp,
+                    nodeId: "ns=4;s=Recept2"
+        });       
     }
-    var id_counter = 0;
 
-   // var circle = new createjs.Shape();
     var bat1 = new createjs.Shape();
     var miza = new createjs.Shape();
     var stiskalnica = new createjs.Shape();
@@ -218,12 +212,17 @@
 
     var stage;
     function init() {
-
         createjs.MotionGuidePlugin.install();
         stage = new createjs.Stage("demoCanvas");
         bat1.graphics.beginFill("grey").drawRoundRect (0, 0, 100, 30, 10);
         bat1.x = 0;
         bat1.y = 185;
+       /*  var text = new createjs.Text("Hello World", "20px Arial", "#ff7700");
+         text.x = 200;
+         text.y = 100;
+        text.textBaseline = "alphabetic";
+        stage.addChild(text);*/
+        
         stage.addChild(bat1);
 
         miza.graphics.beginFill("grey").drawCircle(0, 0, 150);
@@ -257,6 +256,8 @@
         path = new createjs.Shape();
         path.graphics.beginStroke("#ff00ff").moveTo(350,100).curveTo(450,100, 450,200)
         stage.addChild(path);
+        stage.scaleX = 2;
+        stage.scaleY = 2;
         createjs.Ticker.setFPS(60);
 
 
@@ -264,9 +265,66 @@
     }
 
     var messages = [];
-    var socket = io.connect('http://localhost:3700');
+    var socket = io.connect('http://193.2.179.88:3700');
     var rezimDelovanja = document.getElementById("rezimDelovanja");
-    socket.on('rezimDelovanja', function (data) {
+    var trenutniRecept = 0;
+    var id_counter = 0;
+    obdelovanci = [];
+    class Obdelovanec {
+        constructor(id, recept, lokacija, graphics) {
+            this.id = id;
+            this.recept = recept;
+            this.lokacija = lokacija;
+            this.graphics = graphics;
+        }
+    }
+  
+    function ustvariObdelovanec(id, recept, lokacija){
+        var obdelovanec_container = new createjs.Container();
+        var obdelovanec_graphics = new createjs.Shape();
+        obdelovanec_graphics.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
+
+        if(lokacija == 1){
+            obdelovanec_container.x = 150;
+            obdelovanec_container.y = 200;
+        }else if(lokacija == 2){
+            obdelovanec_container.x = 250;
+            obdelovanec_container.y = 200;
+        }else if(lokacija == 3){
+            obdelovanec_container.x = 350;
+            obdelovanec_container.y = 100;
+        }else if(lokacija == 4){
+            obdelovanec_container.x = 450;
+            obdelovanec_container.y = 200;         
+        }else if(lokacija == 5){
+            obdelovanec_container.x = 550;
+            obdelovanec_container.y = 200;      
+        }else if(lokacija == 6){
+            obdelovanec_container.x = 550;
+            obdelovanec_container.y = 500;  
+        }
+
+
+        //TODO: NE DELA IZPIS RECEPTA. TUD NASPLOŠNO DELA BOLJ SLABO
+        obdelovanec_container.addChild(obdelovanec_graphics);
+        obdelovanec_container.addChild();
+        stage.addChild(obdelovanec_container);
+        var obdelovanec = new Obdelovanec(0, 0, lokacija, obdelovanec_container);
+        
+        
+        //NASTAVI Z-INDEX (OBDELOVANEC POD STISKALNICO IN BATOM2)
+        stage.setChildIndex(stiskalnica, stage.getNumChildren()-1);
+        stage.setChildIndex(bat2, stage.getNumChildren()-1);
+        return obdelovanec;
+    }
+    function dodajRecept(obd){
+        var text = new createjs.Text(obd.recept, "20px Arial", 'black');
+        text.x = -43;
+        text.textBaseline = "alphabetic";
+        obd.graphics.addChild(text);
+    }
+    socket.emit("posodobiStanje"); 
+    socket.on('spremembaStanja', function (data) {        
         //SPREMEMBA KLJUČA
         if(data.nodeId =="ns=4;s=Kljuc"){
             if(!data.value){
@@ -276,56 +334,23 @@
                 rezimDelovanja.innerHTML = "<span class='uk-label uk-label-warning'>Ročni</span>"
                 document.getElementById("kljuc").innerHTML = "true";
 
-
             }
         }
         //SPREMEMBA NA VHODU
         if(data.nodeId == "ns=4;s=Podatki_DB_lokacija1_zasedenost"){
             if(data.value){
-                var obdelovanec_graphics = new createjs.Shape();
-                obdelovanec_graphics.graphics.beginFill("DeepSkyBlue").drawCircle(0, 0, 50);
-                obdelovanec_graphics.x = 150;
-                obdelovanec_graphics.y = 200;
-                var obdelovanec = new Obdelovanec(id_counter, 0, 1, obdelovanec_graphics);
-                obdelovanci.push(obdelovanec);
+                var obd = ustvariObdelovanec(id_counter, trenutniRecept, 1)
+                obdelovanci.push(obd);
                 id_counter++;
-                stage.addChild(obdelovanec.graphics);
-                //NASTAVI Z-INDEX (OBDELOVANEC POD STISKALNICO IN BATOM2)
-                stage.setChildIndex(stiskalnica, stage.getNumChildren()-1);
-                stage.setChildIndex(bat2, stage.getNumChildren()-1);
+                socket.emit("posodobiStanje"); 
+                //dodajRecept(obd);
 
-                if(data.value){
-                    document.getElementById("lokacija1_zasedenost").innerHTML = "true";
-                }
-                else{
-                    document.getElementById("lokacija1_zasedenost").innerHTML = "false";
-                }
-
+                document.getElementById("lokacija1_zasedenost").innerHTML = "true";
             }else{
-                //PREMAKNE OBDELOVANEC IZ LOKACIJE 1 NA 2 (ČE OBSTAJA NA LOKACIJI 1)
-                /*obdelovanci.forEach(obd => {
-                    if(obd.lokacija == 1){
-                        var obd_graphics = obd.graphics;
-                        createjs.Tween.get(obd_graphics)
-                            .to({ x: 250 }, 200, createjs.Ease.getPowInOut(4));
-                    }
-                });*/
+                document.getElementById("lokacija1_zasedenost").innerHTML = "false";
             }
-        }     
-        //SPREMEMBA NA LOKACIJI 2 (NI)
-       /* if(data.nodeId == "ns=4;s=Podatki_DB_lokacija2_zasedenost"){
-            if(data.value){
-                obdelovanci.forEach(obd => {
-                    if(obd.lokacija == 1){
-                        var obd_graphics = obd.graphics;
-                        createjs.Tween.get(obd_graphics)
-                            .to({ x: 250 }, 200, createjs.Ease.getPowInOut(4));
-                    }
-                });
-            }else{
+        }
 
-            }
-        }     */
         //SPREMEMBA BAT 1
         if(data.nodeId == "ns=4;s=Bat_A_naprej"){
             if(data.value){
@@ -381,7 +406,6 @@
                     document.getElementById("miza_premik").innerHTML = "false";
                 }
         }
-
         //STISK
         if(data.nodeId == "ns=4;s=Stiskalnica_pritisk"){
             if(data.value){
@@ -427,7 +451,6 @@
                 }
             
         }
-
         //SPREMEMBA TRAK
         if(data.nodeId == "ns=4;s=Trak_premik"){
             if(data.value){
@@ -458,16 +481,18 @@
                 }    
 
         }
-
         //NAPAKA PRI BATU A
         if(data.nodeId == "ns=4;s=error_batA_pokvarjen"){
             if(data.value){
                     document.getElementById("error_bat_a").innerHTML = "true";
-                    document.getElementById("error_bat_a1").innerHTML = "true";
+
+                    document.getElementById("napaka_bat_A").style.display = "";
+                    document.getElementById("error_bat_a1").innerHTML = data.timestamp;
+
                 }
                 else{
                     document.getElementById("error_bat_a").innerHTML = "false";
-                    document.getElementById("error_bat_a1").innerHTML = "true";
+                    document.getElementById("napaka_bat_A").style.display = "none";
                 }
         }
 
@@ -475,21 +500,298 @@
         if(data.nodeId == "ns=4;s=error_batB_pokvarjen"){
             if(data.value){
                     document.getElementById("error_bat_b").innerHTML = "true";
-                    document.getElementById("error_bat_b1").innerHTML = "true";
+                    document.getElementById("napaka_bat_B").style.display = "";
+                    document.getElementById("error_bat_b1").innerHTML = data.timestamp;
+
                 }
                 else{
                     document.getElementById("error_bat_b").innerHTML = "false";
-                    document.getElementById("error_bat_b2").innerHTML = "true";
+                    document.getElementById("napaka_bat_B").style.display = "none";
                 }
         }
+        //FOTO VHOD
+        if(data.nodeId == "ns=4;s=Foto_vhod"){
+            if(data.value){
+                    document.getElementById("foto_vhod").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("foto_vhod").innerHTML = "false";
+                }    
+
+        }
+
+        //LOKACIJE - ZASEDENOST
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija1_zasedenost"){
+            if(data.value){
+                    document.getElementById("lokacija1_zasedenost").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("lokacija1_zasedenost").innerHTML = "false";
+                }    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija2_zasedenost"){
+            if(data.value){
+                    document.getElementById("lokacija2_zasedenost").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("lokacija2_zasedenost").innerHTML = "false";
+                }    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija3_zasedenost"){
+            if(data.value){
+                    document.getElementById("lokacija3_zasedenost").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("lokacija3_zasedenost").innerHTML = "false";
+                }    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija4_zasedenost"){
+            if(data.value){
+                    document.getElementById("lokacija4_zasedenost").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("lokacija4_zasedenost").innerHTML = "false";
+                }    
+
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija5_zasedenost"){
+            if(data.value){
+                    document.getElementById("lokacija5_zasedenost").innerHTML = "true";
+                }
+                else{
+                    document.getElementById("lokacija5_zasedenost").innerHTML = "false";
+                }    
+
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija6_zasedenost"){
+            if(data.value){
+                    document.getElementById("lokacija6_zasedenost").innerHTML = "true";
+                }
+                else{
+                    obdelovanci.forEach(obd => {
+                    if(obd.lokacija == 6){
+                        var index = obdelovanci.indexOf(obd);
+                        obdelovanci.splice(index, 1);
+                    }
+                });  
+                    document.getElementById("lokacija6_zasedenost").innerHTML = "false";
+                }    
+        }
+
+        if(data.nodeId == "ns=4;s=Recept2"){
+                    trenutniRecept = data.value;
+                    document.getElementById("recept").innerHTML = data.value;
+                    document.getElementById("trenutniRecept").innerHTML = data.value
+        }
+
+                //LOKACIJE - RECEPTI
+         if(data.nodeId == "ns=4;s=Podatki_DB_lokacija1_recept"){
+            obdelovanci.forEach(obd => {  
+                          
+                if(obd.lokacija == 1){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            });  
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija2_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 2){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija3_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 3){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            });    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija4_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 4){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija5_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 5){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija6_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 6){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            });  
+        }  
+
+
 
     });
+    socket.on('posodobljenoStanje',function(data){
+        //LOKACIJE - ZASEDENOST
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija1_zasedenost"){
+            if(data.value){
+                obdelovanci.push(ustvariObdelovanec(0,0,1));
+                document.getElementById("lokacija1_zasedenost").innerHTML = "true";
+            }
+            else{
+                document.getElementById("lokacija1_zasedenost").innerHTML = "false";
+            }    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija2_zasedenost"){
+            if(data.value){
+                obdelovanci.push(ustvariObdelovanec(0,0,2));
+                document.getElementById("lokacija2_zasedenost").innerHTML = "true";
+            }
+            else{
+                document.getElementById("lokacija2_zasedenost").innerHTML = "false";
+            }    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija3_zasedenost"){
+            if(data.value){
+                obdelovanci.push(ustvariObdelovanec(0,0,3));
+                document.getElementById("lokacija3_zasedenost").innerHTML = "true";
+            }
+            else{
+                document.getElementById("lokacija3_zasedenost").innerHTML = "false";
+            }    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija4_zasedenost"){
+            if(data.value){
+                obdelovanci.push(ustvariObdelovanec(0,0,4));
+                document.getElementById("lokacija4_zasedenost").innerHTML = "true";
+            }
+            else{
+                document.getElementById("lokacija4_zasedenost").innerHTML = "false";
+            }    
 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija5_zasedenost"){
+            if(data.value){
+                obdelovanci.push(ustvariObdelovanec(0,0,5));
+                document.getElementById("lokacija5_zasedenost").innerHTML = "true";
+            }
+            else{
+                document.getElementById("lokacija5_zasedenost").innerHTML = "false";
+            }    
 
-
-
-
-
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija6_zasedenost"){
+            if(data.value){
+                obdelovanci.push(ustvariObdelovanec(0,0,6));
+                document.getElementById("lokacija6_zasedenost").innerHTML = "true";
+            }
+            else{
+                document.getElementById("lokacija6_zasedenost").innerHTML = "false";
+            }   
+        } 
+   
+        //LOKACIJE - IDji
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija1_ID"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 1){
+                    obd.id = data.value;
+                }
+            });  
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija2_ID"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 2){
+                    obd.id = data.value;
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija3_ID"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 3){
+                    obd.id = data.value;
+                }
+            });    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija4_ID"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 4){
+                    obd.id = data.value;
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija5_ID"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 5){
+                    obd.id = data.value;
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija6_ID"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 6){
+                    obd.id = data.value;
+                }
+            });  
+        }
+ 
+        //LOKACIJE - RECEPTI
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija1_recept"){
+            obdelovanci.forEach(obd => {  
+                          
+                if(obd.lokacija == 1){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            });  
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija2_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 2){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija3_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 3){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            });    
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija4_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 4){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija5_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 5){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            }); 
+        }
+        if(data.nodeId == "ns=4;s=Podatki_DB_lokacija6_recept"){
+            obdelovanci.forEach(obd => {               
+                if(obd.lokacija == 6){
+                    obd.recept = data.value;
+                    dodajRecept(obd);
+                }
+            });  
+        }       
+   });
 
 </script>
 
